@@ -61,14 +61,14 @@ exports.signUp = async (req, res) => {
 
         // Validate data from request (validator library)
         // Name
-        let validateEmptyName = validator.isEmpty(params.name); // empty->true
+        let validateEmptyName = validator.isEmpty(name); // empty->true
         if (validateEmptyName) {
             return res.status(400).send({
                 status: "error",
                 error: "El campo nombre puede estar vacio.",
             });
         }
-        let validateValidName = validator.isAlpha(validator.blacklist(params.name, " ")); // ok-> true
+        let validateValidName = validator.isAlpha(validator.blacklist(name, " ")); // ok-> true
         if (!validateValidName) {
             return res.status(400).send({
                 status: "error",
@@ -77,14 +77,14 @@ exports.signUp = async (req, res) => {
         }
 
         // Surname
-        let validateEmptySurname = validator.isEmpty(params.surname); // empty->true
+        let validateEmptySurname = validator.isEmpty(surname); // empty->true
         if (validateEmptySurname) {
             return res.status(400).send({
                 status: "error",
                 error: "El campo apellidos puede estar vacio.",
             });
         }
-        let validateValidSurname = validator.isAlpha(validator.blacklist(params.surname, " ")); // ok-> true
+        let validateValidSurname = validator.isAlpha(validator.blacklist(surname, " ")); // ok-> true
         if (!validateValidSurname) {
             return res.status(400).send({
                 status: "error",
@@ -162,15 +162,16 @@ exports.signUp = async (req, res) => {
         // Hash password
         const hash = await utilsPassword.hashPassword(params.password);
 
-         //Generate unique id for the user.
+        //Generate unique id for the user.
         params.userId = uuid();
 
+        //remove the confirmPassword field from the result as we dont need to save this in the db
         delete params.confirmPassword;
         params.password = hash;
 
         // Send email
-        let code = Math.floor(100000 + Math.random() * 900000);
-        let expiry = Date.now() + 60 * 1000 * 15; //15 mins in ms
+        let code = Math.floor(100000 + Math.random() * 900000); //Generate random 6 digit code.
+        let expiry = Date.now() + 60 * 1000 * 120; //120 mins in ms
 
         const sendCode = await sendEmail(params.email.toLowerCase(), code);
 
@@ -213,6 +214,134 @@ exports.signUp = async (req, res) => {
         return res.status(500).json({
             error: true,
             message: "Cannot Register",
+        });
+    }
+
+};
+
+/**
+ * Validate the user account with the confirmation code
+ * @param req
+ * @param res
+ * @return {Promise<void>}
+ */
+exports.validateAccount = async (req, res) => {
+
+    // Check request.
+    if (!req.body) {
+        return res.status(403).send({
+            status: "error",
+            message: "ERROR. API can´t received the request.",
+        });
+    }
+    try {
+        if (req.body.email === undefined || req.body.code === undefined) {
+            return res.status(400).send({
+                status: "error",
+                message: "Please make a valid request any field not arrive",
+            });
+        }
+
+        let params = req.body;
+        let email = params.email;
+        let confirmationCode = params.code;
+
+        // Validation
+        // Email
+        let validateEmptyEmail = validator.isEmpty(email);
+        if (validateEmptyEmail) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo email esta vacio",
+            });
+        }
+        let validateValidEmail = validator.isEmail(email);
+        if (!validateValidEmail) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo email no es valido",
+            });
+        }
+
+        // Code
+        let validateEmptyCode = validator.isEmpty(confirmationCode);
+        if (validateEmptyCode) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo codigo de confirmacion esta vacio",
+            });
+        }
+
+        let validateValidCode = validator.isNumeric(confirmationCode);
+        if (!validateValidCode) {
+            return res.status(400).send({
+                status: "error",
+                error: "El código de verificacion no puede contener letras, solo puede contener números revisa el codigo en tu correo",
+            });
+        }
+
+
+        const checkEmail = await User.findOne(
+            {email: email.toLowerCase()},
+            (err, email) => {
+                if (err) {
+                    console.log(err);
+                    return res.status(500).send({
+                        status: "error",
+                        message: " error while check if mail exist in db",
+                        error: err,
+                    });
+                }
+                if (!email) {
+                    return res.status(400).send({
+                        status: "error",
+                        message: " El email introducido no pertenece a ningun usuario",
+                    });
+                }
+            }
+        );
+
+        // TODO: Check possible errors query
+        // check if confirmationCode is valid
+        const user = await User.findOne({
+            email: email,
+            emailToken: confirmationCode,
+            emailTokenExpires: {$gt: Date.now()},
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                status: "error",
+                error: true,
+                message: "Invalid code. Probably your authentication code is wrong or expired",
+            });
+        } else {
+            if (user.active) {
+                return res.status(400).send({
+                    status: "success",
+                    message: "Account already activated",
+                });
+            }
+
+            user.emailToken = "";
+            user.emailTokenExpires = null;
+            user.active = true;
+
+            // TODO: CHECK ERRORS SAVE()
+            await user.save();
+
+            return res.status(200).json({
+                status: "success",
+                message: "Account activated.",
+            });
+        }
+
+    } catch (error) {
+        console.error("activation-error", error);
+        return res.status(500).json({
+            status: "error",
+            error: true,
+            message: error.message,
         });
     }
 

@@ -8,9 +8,10 @@ const cleanBody = require("../middlewares/cleanBody");
 
 
 // ************************** API USER ROUTES *****************************************
-router.post("/register",  AuthController.signUp);
-//router.post("/register", verifyEmail.checkDuplicateEmail, AuthController.SignUp);
-//router.get("/confirm/:confirmationCode", AuthController.verifyUser);
+router.post("/register",cleanBody, AuthController.signUp);
+router.patch("/activate", cleanBody, AuthController.validateAccount);
+// TODO: route refresh if expire confirmationCode
+//router.post("/refresh-confirmationCode", verifyEmail.checkDuplicateEmail, AuthController.refreshConfirmationCode);
 //router.post("/login", AuthController.signIn);
 
 
