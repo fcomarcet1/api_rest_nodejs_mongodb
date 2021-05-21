@@ -1,0 +1,1 @@
+- Cambiar mensajes error Joi validation schema o cambiar validador
