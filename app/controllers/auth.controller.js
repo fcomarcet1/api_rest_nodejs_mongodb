@@ -4,6 +4,7 @@ require("dotenv").config();
 const validator = require("validator");
 const User = require("../models/user.model");
 const utilsPassword = require("../helpers/utilsPassword");
+const utilsEmail = require("../helpers/utilsEmail");
 const config = require("../config/auth.config"); // config
 const sendEmail = require("../services/mailer");
 
@@ -234,6 +235,7 @@ exports.validateAccount = async (req, res) => {
             message: "ERROR. API can´t received the request.",
         });
     }
+
     try {
         if (req.body.email === undefined || req.body.code === undefined) {
             return res.status(400).send({
@@ -280,8 +282,16 @@ exports.validateAccount = async (req, res) => {
             });
         }
 
-
-        const checkEmail = await User.findOne(
+        // Check if email exist in DB
+        let checkEmail = await utilsEmail.existsEmail(email); // return true/false
+        if (!checkEmail){
+            return res.status(400).send({
+                status: "error",
+                message: " El email introducido no pertenece a ningun usuario",
+            });
+        }
+        console.log(checkEmail);
+        /*const checkEmail = await User.findOne(
             {email: email.toLowerCase()},
             (err, email) => {
                 if (err) {
@@ -299,7 +309,7 @@ exports.validateAccount = async (req, res) => {
                     });
                 }
             }
-        );
+        );*/
 
         // TODO: Check possible errors query
         // check if confirmationCode is valid
@@ -345,4 +355,60 @@ exports.validateAccount = async (req, res) => {
         });
     }
 
+};
+
+/**
+ * @description Refresh expired confirmation code for active account.
+ * @param req
+ * @param res
+ * @return {Promise<*>}
+ */
+exports.refreshConfirmationCode = async (req, res) => {
+
+    try{
+
+        // Check request.
+        if (!req.body) {
+            return res.status(403).send({
+                status: "error",
+                message: "ERROR. API can´t received the request.",
+            });
+        }
+
+        if (req.body.email === undefined){
+            return res.status(400).send({
+                status: "error",
+                message: "ERROR. API can´t received the field email.",
+            });
+        }
+
+        let params = req.body;
+        let email = params.email;
+
+        // Validate
+        // Email
+        let validateEmptyEmail = validator.isEmpty(email);
+        if (validateEmptyEmail) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo email esta vacio",
+            });
+        }
+        let validateValidEmail = validator.isEmail(email);
+        if (!validateValidEmail) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo email no es valido",
+            });
+        }
+
+
+    }
+    catch (error) {
+        console.error("refresh confirmationCode-error", error);
+        return res.status(500).send({
+            status:"error",
+            message: "Cannot refresh confirmationCode",
+        });
+    }
 };
