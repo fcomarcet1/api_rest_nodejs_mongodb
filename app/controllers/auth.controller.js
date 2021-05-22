@@ -8,7 +8,8 @@ const utilsEmail = require("../helpers/utilsEmail");
 const config = require("../config/auth.config"); // config
 const sendEmail = require("../services/mailer");
 
-const {v4: uuid} = require("uuid");
+//const {v4: uuid} = require("uuid");
+const { v4: uuidv4 } = require('uuid');
 const {customAlphabet: generate} = require("nanoid");
 
 const CHARACTER_SET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -164,7 +165,8 @@ exports.signUp = async (req, res) => {
         const hash = await utilsPassword.hashPassword(params.password);
 
         //Generate unique id for the user.
-        params.userId = uuid();
+        params.userId = uuidv4();
+        //params.userId = uuid();
 
         //remove the confirmPassword field from the result as we dont need to save this in the db
         delete params.confirmPassword;
@@ -245,8 +247,8 @@ exports.validateAccount = async (req, res) => {
         }
 
         let params = req.body;
-        let email = params.email;
-        let confirmationCode = params.code;
+        let email = params.email.trim();
+        let confirmationCode = params.code.trim();
 
         // Validation
         // Email
@@ -357,6 +359,8 @@ exports.validateAccount = async (req, res) => {
 
 };
 
+
+// TODO: ACABAR
 /**
  * @description Refresh expired confirmation code for active account.
  * @param req

@@ -9,7 +9,7 @@ const bodyParser = require("body-parser");
 
 // Execute Express
 const app = express();
-
+process.env.TZ = "Europe/Madrid";
 
 // **************** LOAD FILE ROUTES ************************
 //var adminRoutes = require("./app/routes/admin.routes");
@@ -32,7 +32,6 @@ app.use((req, res, next) => {
     res.header('Allow', 'GET, POST, OPTIONS, PUT, DELETE, PATCH');
     next();
 });
-
 
 
 // *************************** TEST ROUTES **************************
