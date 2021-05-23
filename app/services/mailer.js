@@ -51,6 +51,7 @@ async function sendEmail(email, code) {
             html: body_html,
         };
 
+        // send email
         let info = await transporter.sendMail(mailOptions);
 
         return {error: false};
@@ -58,10 +59,11 @@ async function sendEmail(email, code) {
     } catch (error) {
         console.error("send-email-error", error);
         return {
+            status: "error",
             error: true,
             message: "Cannot send email",
         };
     }
 }
 
-module.exports =  sendEmail ;
+module.exports = sendEmail;

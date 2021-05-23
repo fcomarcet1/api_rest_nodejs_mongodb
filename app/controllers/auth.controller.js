@@ -2,16 +2,15 @@
 
 require("dotenv").config();
 const validator = require("validator");
+const moment = require("moment");
 const User = require("../models/user.model");
 const utilsPassword = require("../helpers/utilsPassword");
 const utilsEmail = require("../helpers/utilsEmail");
-const config = require("../config/auth.config"); // config
+//const config = require("../config/auth.config"); // config
 const sendEmail = require("../services/mailer");
+const {v4: uuidv4} = require('uuid');
 
-//const {v4: uuid} = require("uuid");
-const { v4: uuidv4 } = require('uuid');
 const {customAlphabet: generate} = require("nanoid");
-
 const CHARACTER_SET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const REFERRAL_CODE_LENGTH = 8;
 const referralCode = generate(CHARACTER_SET, REFERRAL_CODE_LENGTH);
@@ -151,7 +150,7 @@ exports.signUp = async (req, res) => {
         }
 
         //Check if the email has been already registered.
-        var user = await User.findOne({email: params.email,});
+        const user = await User.findOne({email: email.toLowerCase(),});
 
         if (user) {
             return res.json({
@@ -162,7 +161,7 @@ exports.signUp = async (req, res) => {
         }
 
         // Hash password
-        const hash = await utilsPassword.hashPassword(params.password);
+        const hash = await utilsPassword.hashPassword(password);
 
         //Generate unique id for the user.
         params.userId = uuidv4();
@@ -174,10 +173,8 @@ exports.signUp = async (req, res) => {
 
         // Send email
         let code = Math.floor(100000 + Math.random() * 900000); //Generate random 6 digit code.
-        let expiry = Date.now() + 60 * 1000 * 120; //120 mins in ms
 
-        const sendCode = await sendEmail(params.email.toLowerCase(), code);
-
+        const sendCode = await sendEmail(email.toLowerCase(), code);
         if (sendCode.error) {
             return res.status(500).json({
                 status: "error",
@@ -187,6 +184,7 @@ exports.signUp = async (req, res) => {
         }
 
         params.emailToken = code;
+        let expiry = Date.now() + 60 * 1000 * 120; //120 mins in ms
         params.emailTokenExpires = new Date(expiry);
 
         //Check if referred and validate code.
@@ -286,7 +284,7 @@ exports.validateAccount = async (req, res) => {
 
         // Check if email exist in DB
         let checkEmail = await utilsEmail.existsEmail(email); // return true/false
-        if (!checkEmail){
+        if (!checkEmail) {
             return res.status(400).send({
                 status: "error",
                 message: " El email introducido no pertenece a ningun usuario",
@@ -369,8 +367,7 @@ exports.validateAccount = async (req, res) => {
  */
 exports.refreshConfirmationCode = async (req, res) => {
 
-    try{
-
+    try {
         // Check request.
         if (!req.body) {
             return res.status(403).send({
@@ -379,7 +376,7 @@ exports.refreshConfirmationCode = async (req, res) => {
             });
         }
 
-        if (req.body.email === undefined){
+        if (req.body.email === undefined) {
             return res.status(400).send({
                 status: "error",
                 message: "ERROR. API can´t received the field email.",
@@ -406,12 +403,20 @@ exports.refreshConfirmationCode = async (req, res) => {
             });
         }
 
+        //comprobar si codeConfirmation is expired
+        //if (payload.exp <= moment().unix()) {}
+        //User.findOne({email: email.toLowerCase(), :{ $lt:  }})
+        const emailTokenExpired = await User.findOne(
+            {$and: [
+                {email: email}, {emailTokenExpires: {'$lte': moment().unix()}}
+                ]}
+        );
+        console.log(emailTokenExpired);
 
-    }
-    catch (error) {
+    } catch (error) {
         console.error("refresh confirmationCode-error", error);
         return res.status(500).send({
-            status:"error",
+            status: "error",
             message: "Cannot refresh confirmationCode",
         });
     }
