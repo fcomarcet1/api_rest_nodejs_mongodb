@@ -29,6 +29,7 @@ async function sendEmail(email, code) {
                 <p>Thank you for subscribing. Please confirm your email by clicking on the following link and insert your authentication code</p>
                 <a href=http://localhost:5000/users/activate> Click here</a>
                 <p>If link doesnt work use this link http://localhost:5000/users/activate</p>  
+                <p>If you have not requested this code please do not reply to this email</p>
               </body>
             </html>`;
 

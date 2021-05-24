@@ -403,15 +403,49 @@ exports.refreshConfirmationCode = async (req, res) => {
             });
         }
 
-        //comprobar si codeConfirmation is expired
-        //if (payload.exp <= moment().unix()) {}
-        //User.findOne({email: email.toLowerCase(), :{ $lt:  }})
-        const emailTokenExpired = await User.findOne(
-            {$and: [
-                {email: email}, {emailTokenExpires: {'$lte': moment().unix()}}
-                ]}
-        );
-        console.log(emailTokenExpired);
+        // comprobar si existe req.body.email en bd
+        const user = await User.findOne({email: email});
+
+        if (!user) {
+            return res.status(200).send({
+                status: "success",
+                message: "El email introducido no corresponde a ningun usuario registrado. Por favor introduce un email valido "
+            });
+        }
+
+        // Create confirmation code
+        let code = Math.floor(100000 + Math.random() * 900000); //Generate random 6 digit code.
+        let expiry = Date.now() + 60 * 1000 * 120; //120 mins in ms
+
+        // send email
+        const sendCode = await sendEmail(email.toLowerCase(), code);
+        if (sendCode.error) {
+            return res.status(500).json({
+                status: "error",
+                error: true,
+                message: "Couldn't send verification email.",
+            });
+        }
+
+        // Update fields emailToken, emailTokenExpires in db
+        params.emailToken = code;
+        params.emailTokenExpires = new Date(expiry);
+
+        const updateConfirmationCode = await User.findOneAndUpdate({email: email}, params);
+        if (!updateConfirmationCode){
+            return res.status(400).send({
+                status: "error",
+                error: true,
+                message: "Cannot refresh confirmationCode "
+            });
+        }
+
+        return res.status(200).send({
+            status: "success",
+            error: false,
+            message: "Por favor revisa tu correo e introduce la nueva clave de confirmacion"
+        });
+
 
     } catch (error) {
         console.error("refresh confirmationCode-error", error);
