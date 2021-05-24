@@ -13,11 +13,10 @@
          -Inputs: [email]
 
 ##USER
-    -REGISTER: (POST) //localhost:3099/api/auth/register
-        -Inputs: [name, surname, email, password]
+    -SHOW: User profile: (GET) http://localhost:3099/api/user/show
+    -GET ALL: Users list [ROLE_ADMIN]: (GET)  http://localhost:3099/api/user/all
 
-    -LOGIN: (POST) http://localhost:3099/api/auth/login
-        -Inputs: [email, password]
+    
 
 ##ADMIN
     -REGISTER: (POST) //localhost:3099/api/auth/register
