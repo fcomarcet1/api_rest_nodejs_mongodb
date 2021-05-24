@@ -18,6 +18,7 @@ exports.show = async (req, res) => {
                 message: "ERROR. API can´t received the request.",
             });
         }
+
         // get token from headers
         const token = req.headers.authorization;
 
@@ -45,6 +46,7 @@ exports.show = async (req, res) => {
             message: "Info user logged NOTE: _id: id document, userId: userId",
             user: identity,
         });
+
     }catch (error) {
         console.error("show logged user:", error);
         return res.status(500).send({
@@ -58,4 +60,48 @@ exports.show = async (req, res) => {
 };
 
 
-exports.getAll = async (req, res) => {};
+exports.getAll = async (req, res) => {
+
+    // Check request.
+    if (!req.body) {
+        return res.status(403).send({
+            status: "error",
+            error: true,
+            message: "ERROR. API can´t received the request.",
+        });
+    }
+
+    try{
+        const users = await User.find();
+        if (!users) {
+            return res.status(404).send({
+                status: "error",
+                error: true,
+                message: "No existen usuarios registrados actualmente.",
+            });
+        }
+
+        // Unset fields from user
+        users.forEach((value) => {
+            value["password"] = undefined;
+            value["__v"] = undefined;
+            value["emailToken"] = undefined;
+            value["emailTokenExpires"] = undefined;
+
+        });
+
+        // Return response
+        return res.status(200).send({
+            status: "success",
+            error: false,
+            users: users,
+        });
+    }catch (error) {
+        console.error("show all users:", error);
+        return res.status(500).send({
+            status: "error",
+            error: true,
+            message: "Error when try show all users list: " + error,
+        });
+    }
+};
