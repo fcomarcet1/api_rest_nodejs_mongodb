@@ -6,6 +6,11 @@
 
     -LOGIN: (POST) http://localhost:3099/api/auth/login
         -Inputs: [email, password]
+    
+    -ACTIVATE ACCOUNT (PATCH) http://localhost:3099/api/auth/activate
+
+    -RESET CONFIRMATION CODE (PATCH) http://localhost:3099/api/auth/refresh-confirmationCode
+         -Inputs: [email]
 
 ##USER
     -REGISTER: (POST) //localhost:3099/api/auth/register

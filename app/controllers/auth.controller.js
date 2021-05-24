@@ -4,10 +4,10 @@ require("dotenv").config();
 const validator = require("validator");
 const moment = require("moment");
 const User = require("../models/user.model");
+const jwt  = require("../services/jwt");
+const sendEmail = require("../services/mailer");
 const utilsPassword = require("../helpers/utilsPassword");
 const utilsEmail = require("../helpers/utilsEmail");
-//const config = require("../config/auth.config"); // config
-const sendEmail = require("../services/mailer");
 const {v4: uuidv4} = require('uuid');
 
 const {customAlphabet: generate} = require("nanoid");
@@ -358,7 +358,6 @@ exports.validateAccount = async (req, res) => {
 };
 
 
-// TODO: ACABAR
 /**
  * @description Refresh expired confirmation code for active account.
  * @param req
@@ -432,7 +431,7 @@ exports.refreshConfirmationCode = async (req, res) => {
         params.emailTokenExpires = new Date(expiry);
 
         const updateConfirmationCode = await User.findOneAndUpdate({email: email}, params);
-        if (!updateConfirmationCode){
+        if (!updateConfirmationCode) {
             return res.status(400).send({
                 status: "error",
                 error: true,
@@ -454,4 +453,136 @@ exports.refreshConfirmationCode = async (req, res) => {
             message: "Cannot refresh confirmationCode",
         });
     }
+};
+
+/**
+ * @description Login
+ * @param req
+ * @param res
+ * @return {Promise<void>}
+ */
+exports.signIn = async (req, res) => {
+
+    try {
+        // Check request.
+        if (!req.body) {
+            return res.status(403).send({
+                status: "error",
+                message: "ERROR. API can´t received the request.",
+            });
+        }
+
+        // check if not send any required field
+        if (req.body.email === undefined || req.body.password === undefined) {
+            return res.status(403).send({
+                status: "error",
+                message: "ERROR. Any field from login form not received.",
+            });
+        }
+
+        // Get params from request
+        let params = req.body;
+
+        let email = params.email.trim();
+        let password = params.password.trim();
+
+        // Validation
+        // Email
+        let validateEmptyEmail = validator.isEmpty(params.email);
+        if (validateEmptyEmail) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo email esta vacio",
+            });
+        }
+        let validateValidEmail = validator.isEmail(params.email);
+        if (!validateValidEmail) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo email no es valido",
+            });
+        }
+
+        // Password
+        let validateEmptyPassword = validator.isEmpty(params.password);
+        if (validateEmptyPassword) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo password no puede estar vacio.",
+            });
+        }
+
+        // Find if any account with that email exists in DB
+        const user = await User.findOne({email: email});
+
+        if (!user) {
+            return res.status(404).send({
+                status: "error",
+                error: true,
+                message: "Account not found",
+            });
+        }
+
+        // Throw error if account is not activated (when in active the field active in db = true).
+        if (!user.active) {
+            return res.status(400).json({
+                error: true,
+                message: "You must verify your email to activate your account",
+            });
+        }
+
+        // TODO: *************** REVISAR **************************************
+        // Verify the password is valid.
+        console.log(utilsPassword.comparePassword("pepe", "pepe"))
+        const passwordIsValid = await utilsPassword.comparePassword(password, user.password);
+
+        if (!passwordIsValid) {
+            return res.status(400).send({
+                status: "error",
+                error: true,
+                message: "Invalid credentials. Your password is wrong",
+            });
+        }
+
+        // Generate Auth token createAuthToken return {error: false, token: token}
+        const authToken = await jwt.createAuthToken(user);
+        if (authToken.error){
+            return res.status(500).send({
+                status: "error",
+                error: true,
+                message: "Couldn't create access token. Please try again later",
+            });
+        }
+
+        // Save token in db
+        user.accessToken = authToken;
+        const saveUser = await user.save();
+
+        if(!saveUser || Object.keys(saveUser).length === 0){
+            return res.status(500).send({
+                status: "error",
+                error: true,
+                message: "Couldn't save access token for logging. Please try again later",
+            });
+        }
+
+
+        // Return response with token
+        return res.status(200).send({
+            error: false,
+            status: "success",
+            message: "User logged in successfully",
+            token: authToken,
+        });
+
+    } catch (error) {
+        console.error("Login error", error);
+        return res.status(500).send({
+            error: true,
+            status: "error",
+            message: "Login error: " + error,
+        });
+    }
+
+
 };

@@ -12,9 +12,9 @@ exports.existsEmail = async (email) => {
 
     try {
         //let existsEmail = false;
-        const issetEmail = await User.findOne({email: email.toLowerCase()});
-        if (issetEmail) {
-            return true;
+        const user = await User.findOne({email: email.toLowerCase()});
+        if (user) {
+            return user;
         } else {
             return false;
         }

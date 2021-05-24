@@ -14,7 +14,7 @@ process.env.TZ = "Europe/Madrid";
 // **************** LOAD FILE ROUTES ************************
 //var adminRoutes = require("./app/routes/admin.routes");
 const authRoutes = require("./app/routes/auth.routes");
-//var userRoutes = require("./app/routes/user.routes");
+var userRoutes = require("./app/routes/user.routes");
 //var uploadRoutes = require("./app/routes/upload.routes")
 
 
@@ -48,11 +48,10 @@ app.get("/server-info", (req, res) => {
 });
 
 
-
 // ******************* REWRITE PATH ROUTES /api/url/register /api/users/show ************************
 //app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
-//app.use("/api/user", userRoutes);
+app.use("/api/user", userRoutes);
 //app.use("/api/upload", uploadRoutes);
 
 

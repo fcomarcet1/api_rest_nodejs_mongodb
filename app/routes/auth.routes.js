@@ -11,7 +11,7 @@ const cleanBody = require("../middlewares/cleanBody");
 router.post("/register",cleanBody, AuthController.signUp);
 router.patch("/activate", cleanBody, AuthController.validateAccount);
 router.patch("/refresh-confirmationCode", AuthController.refreshConfirmationCode );
-//router.post("/login", AuthController.signIn);
+router.post("/login", AuthController.signIn);
 
 
 module.exports = router;
