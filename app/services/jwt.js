@@ -25,7 +25,7 @@ exports.createAuthToken = async (user) => {
         };
 
         // Return token
-        return  await jwt.sign(payload, process.env.JWT_SECRET);
+        return await jwt.sign(payload, process.env.JWT_SECRET);
 
         /*return {
             authToken: authToken
@@ -54,31 +54,54 @@ exports.createAuthToken = async (user) => {
 /**
  * @description Check if token is valid(expiration time, token_id).
  * @param token
- * @return {Promise<{error: boolean, message: string, status: string}>}
+ * @return {Promise<{error: boolean}>}
  */
 exports.verifyToken = async (token) => {
 
     try {
+        // verify,
+
         // comprobar que es valido con el secreto
-        const verifyToken = await jwt.verify(token, process.env.JWT_SECRET);
-        console.log(verifyToken);
+        let decodedToken = await jwt.verify(token, process.env.JWT_SECRET);
+        let userId = decodedToken.userId;
 
-        // decode token
-        //const payload = await jwt.decode(token, process.env.JWT_SECRET);
 
-        // comprobar fecha expiracion
-        //if (payload.exp <= moment().unix()) {}
+        // verificar token
+        let checkToken = await User.findOne({
+            accessToken: token,
+            userId: userId,
+        });
 
-        // verificar id token
-        // obtener id user, obtener accessToken y compararlo
+        if (!checkToken) {
+            return {
+                status: "error",
+                error: true,
+                message: "Token not valid:",
+            };
+        }
+
+        // check if token has expired
+        if (decodedToken.exp <= moment().unix()) {
+            return {
+                status: "error",
+                error: true,
+                message: "Token is expired",
+            }
+        }
+
+        return {
+            status: "success",
+            error: false,
+            message: "Token verified successful",
+            authToken: decodedToken,
+        }
 
     } catch (error) {
-        console.error("verify Token error", error);
+        console.error("verify Token error: ", error);
         return {
             status: "error",
             error: true,
-            message: "create auth token error: " + error,
-
+            message: "verify Token error :" + error,
         };
     }
 }
@@ -94,7 +117,6 @@ exports.getIdentity = async (token) => {
     try {
         // Check if token is valid and decode token with verify
         let authToken = await jwt.verify(token, process.env.JWT_SECRET);
-        console.log(authToken);
         let documentId = authToken.sub;
         let userId = authToken.userId;
 

@@ -34,7 +34,13 @@ exports.comparePassword = async (inputPassword, hashedPassword) => {
         return await bcrypt.compare(inputPassword, hashedPassword);
     }
     catch (error) {
-        throw new Error("Comparison failed" + error);
+        console.error("Comparison failed", error);
+        return {
+            status: "error",
+            error: true,
+            message: "Comparison failed: " + error,
+        };
+        //throw new Error("Comparison failed" + error);
     }
 
 };
