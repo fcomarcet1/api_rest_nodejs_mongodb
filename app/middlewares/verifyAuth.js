@@ -50,28 +50,13 @@ exports.verifyAuth = async (req, res, next) => {
                 message: "Invalid token. Unauthorized",
             });
         }
-
-        // Unset fields from user
-        user.role  = undefined;
-        user.active = undefined;
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpires = undefined;
-        user.emailTokenExpires = undefined;
-        user.emailToken = undefined;
-        user.referrer = undefined;
-        user.password = undefined;
-        user.accessToken = undefined;
-        user.referralCode = undefined;
-        user.__v = undefined;
-        user.sub = undefined;
-
-
-        return res.status(200).send({
+        next();
+        /*return res.status(200).send({
             status: "success",
             error: false,
             message: "Info user logged NOTE: _id: id document, userId: userId",
             user: user,
-        });
+        });*/
 
     } catch (error) {
         console.error("verify if user is authenticated", error);

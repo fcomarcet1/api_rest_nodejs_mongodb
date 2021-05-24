@@ -6,7 +6,7 @@ const jwt = require("../services/jwt");
  * @description Get user info
  * @param req
  * @param res
- * @return {Promise<void>}
+ * @return {Promise<*>}
  */
 exports.show = async (req, res) => {
 
@@ -24,11 +24,25 @@ exports.show = async (req, res) => {
         // Get data from user
         const identity = await jwt.getIdentity(token);
 
+        // Unset fields from user
+        identity.role  = undefined;
+        identity.active = undefined;
+        identity.resetPasswordToken = undefined;
+        identity.resetPasswordExpires = undefined;
+        identity.emailTokenExpires = undefined;
+        identity.emailToken = undefined;
+        identity.referrer = undefined;
+        identity.password = undefined;
+        identity.accessToken = undefined;
+        identity.referralCode = undefined;
+        identity.__v = undefined;
+        identity._id = undefined;
+
         // Return response
         return res.status(200).send({
             status: "success",
             error: false,
-            message: "Info logged user",
+            message: "Info user logged NOTE: _id: id document, userId: userId",
             user: identity,
         });
     }catch (error) {
@@ -42,3 +56,6 @@ exports.show = async (req, res) => {
 
 
 };
+
+
+exports.getAll = async (req, res) => {};

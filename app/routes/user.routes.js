@@ -7,7 +7,7 @@ const UserController = require("../controllers/user.controller");
 const cleanBody = require("../middlewares/cleanBody");
 const AuthMiddleware = require("../middlewares/verifyAuth");
 
-//********************** ROUTES ***********************************
-router.get("/profile", [cleanBody, AuthMiddleware.verifyAuth], UserController.show);
+//*********************************** ROUTES ***********************************
+router.get("/profile", [ cleanBody, AuthMiddleware.verifyAuth], UserController.show);
 
 module.exports = router;
