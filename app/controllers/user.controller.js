@@ -1,6 +1,8 @@
 'use strict';
 const User = require("../models/user.model");
 const jwt = require("../services/jwt");
+const validator = require("validator");
+const moment = require("moment");
 
 /**
  * @description Get user info
@@ -10,7 +12,7 @@ const jwt = require("../services/jwt");
  */
 exports.show = async (req, res) => {
 
-    try{
+    try {
         // Check request.
         if (!req.body) {
             return res.status(403).send({
@@ -24,9 +26,16 @@ exports.show = async (req, res) => {
 
         // Get data from user
         const identity = await jwt.getIdentity(token);
+        if (identity.error) {
+            return res.status(404).send({
+                status: "error",
+                error: true,
+                message: "Error cant get user info : " + error,
+            });
+        }
 
         // Unset fields from user
-        identity.role  = undefined;
+        identity.role = undefined;
         identity.active = undefined;
         identity.resetPasswordToken = undefined;
         identity.resetPasswordExpires = undefined;
@@ -47,7 +56,7 @@ exports.show = async (req, res) => {
             user: identity,
         });
 
-    }catch (error) {
+    } catch (error) {
         console.error("show logged user:", error);
         return res.status(500).send({
             status: "error",
@@ -76,7 +85,7 @@ exports.getAll = async (req, res) => {
         });
     }
 
-    try{
+    try {
         const users = await User.find();
         if (!users) {
             return res.status(404).send({
@@ -101,7 +110,7 @@ exports.getAll = async (req, res) => {
             error: false,
             users: users,
         });
-    }catch (error) {
+    } catch (error) {
         console.error("show all users:", error);
         return res.status(500).send({
             status: "error",
@@ -112,10 +121,10 @@ exports.getAll = async (req, res) => {
 };
 
 /**
- * @description Get user data for fill update user account
+ * @description Get user data for fill update user account.
  * @param req
  * @param res
- * @return {Promise<void>}
+ * @return {Promise<*>}
  */
 exports.edit = async (req, res) => {
 
@@ -137,7 +146,7 @@ exports.edit = async (req, res) => {
         const identity = await jwt.getIdentity(authToken);
 
         // Unset fields from user
-        identity.role  = undefined;
+        identity.role = undefined;
         identity.active = undefined;
         identity.resetPasswordToken = undefined;
         identity.resetPasswordExpires = undefined;
@@ -158,7 +167,7 @@ exports.edit = async (req, res) => {
             user: identity,
         });
 
-    }catch (error) {
+    } catch (error) {
         console.error("edit user:", error);
         return res.status(500).send({
             status: "error",
@@ -172,7 +181,7 @@ exports.edit = async (req, res) => {
  * @description Update and save new user data
  * @param req
  * @param res
- * @return {Promise<void>}
+ * @return {Promise<*>}
  */
 exports.update = async (req, res) => {
 
@@ -184,14 +193,187 @@ exports.update = async (req, res) => {
             message: "ERROR. API can´t received the request.",
         });
     }
+    // check if not send any required field
+    if (
+        req.body.name === undefined ||
+        req.body.surname === undefined ||
+        req.body.email === undefined
+    ) {
+        return res.status(403).send({
+            error: true,
+            status: "error",
+            message: "ERROR. Any field from user update form not received.",
+        });
+    }
 
     try {
-        return res.status(200).send({
-            status: "success",
-            error: false,
-            message: "update method",
-        });
-    }catch (error) {
+
+        // Get data from request
+        let params = req.body;
+
+        // trim data from request
+        params.name = params.name.trim();
+        params.surname = params.surname.trim();
+        params.email = params.email.trim();
+
+        // Validate data from request (validator library)
+        // Name
+        let validateEmptyName = validator.isEmpty(params.name); // empty->true
+        let validateValidName = validator.isAlpha(validator.blacklist(params.name, " ")); // ok-> true
+
+        if (validateEmptyName) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo nombre puede estar vacio.",
+            });
+        }
+        if (!validateValidName) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo nombre no es valido no puede contener numeros.",
+            });
+        }
+
+        // Surname
+        let validateEmptySurname = validator.isEmpty(params.surname); // empty->true
+        let validateValidSurname = validator.isAlpha(validator.blacklist(params.surname, " ")); // ok-> true
+
+        if (validateEmptySurname) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo apellidos puede estar vacio.",
+            });
+        }
+
+        if (!validateValidSurname) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo apellidos no es valido no puede contener numeros.",
+            });
+        }
+
+        // Email
+        let validateEmptyEmail = validator.isEmpty(params.email);
+        let validateValidEmail = validator.isEmail(params.email);
+
+        if (validateEmptyEmail) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo email esta vacio",
+            });
+        }
+
+        if (!validateValidEmail) {
+            return res.status(400).send({
+                status: "error",
+                error: "El campo email no es valido",
+            });
+        }
+        // get user id
+        let token = req.headers.authorization;
+        let identity = await jwt.getIdentity(token);
+
+        if (identity.error) {
+            return res.status(404).send({
+                status: "error",
+                error: true,
+                message: "Error when try update user info : " + error,
+            });
+        }
+
+        // Check if input email has been modified and check if exists in db and your owner
+        if (params.email !== identity.email) {
+
+            let user = await User.findOne({email: params.email.toLowerCase()});
+
+            if (user && user.email === params.email) {
+                return res.status(200).send({
+                    status: "success",
+                    message: "Email no valido ya pertenece a otro usuario"
+                });
+            }
+            else {
+                // Find && update document
+                params.updatedAt = moment().format();
+
+                let userUpdated = await User.findOneAndUpdate(
+                    {
+                        _id: identity._id,
+                        userId: identity.userId
+                    },
+                    params,
+                    {new: true}
+                );
+
+                // Unset object keys
+                userUpdated.role = undefined;
+                userUpdated.active = undefined;
+                userUpdated.resetPasswordToken = undefined;
+                userUpdated.resetPasswordExpires = undefined;
+                userUpdated.emailTokenExpires = undefined;
+                userUpdated.emailToken = undefined;
+                userUpdated.referrer = undefined;
+                userUpdated.password = undefined;
+                userUpdated.accessToken = undefined;
+                userUpdated.referralCode = undefined;
+                userUpdated.__v = undefined;
+                userUpdated._id = undefined;
+
+                return res.status(200).send({
+                    status: "success",
+                    error: false,
+                    message: "User info updated successful",
+                    user: userUpdated,
+                });
+            }
+
+        } else { // case user not modify field email
+            // find document && update
+            params.updatedAt = moment().format();
+
+            let userUpdated = await User.findOneAndUpdate(
+                {
+                    _id: identity._id,
+                    userId: identity.userId
+                },
+                params,
+                {new: true}
+            );
+
+            // Unset object keys
+            userUpdated.role = undefined;
+            userUpdated.active = undefined;
+            userUpdated.resetPasswordToken = undefined;
+            userUpdated.resetPasswordExpires = undefined;
+            userUpdated.emailTokenExpires = undefined;
+            userUpdated.emailToken = undefined;
+            userUpdated.referrer = undefined;
+            userUpdated.password = undefined;
+            userUpdated.accessToken = undefined;
+            userUpdated.referralCode = undefined;
+            userUpdated.__v = undefined;
+            userUpdated._id = undefined;
+
+            return res.status(200).send({
+                status: "success",
+                error: false,
+                message: "User info updated successful",
+                user: userUpdated,
+            });
+        }
+
+
+        /*// Find in db document for update
+        params.updatedAt = moment().format();
+
+        let user = await User.findByIdAndUpdate(
+            {_id: identity.sub, userId: identity.userId},
+            params,
+            {new: true}
+        );*/
+
+
+    } catch (error) {
         console.error("edit user:", error);
         return res.status(500).send({
             status: "error",
