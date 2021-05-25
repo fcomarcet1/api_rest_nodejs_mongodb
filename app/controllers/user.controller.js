@@ -362,17 +362,6 @@ exports.update = async (req, res) => {
             });
         }
 
-
-        /*// Find in db document for update
-        params.updatedAt = moment().format();
-
-        let user = await User.findByIdAndUpdate(
-            {_id: identity.sub, userId: identity.userId},
-            params,
-            {new: true}
-        );*/
-
-
     } catch (error) {
         console.error("edit user:", error);
         return res.status(500).send({
@@ -381,4 +370,60 @@ exports.update = async (req, res) => {
             message: "Error when try update data user : " + error,
         });
     }
+};
+
+/**
+ * @description Delete user account.
+ * @param req
+ * @param res
+ * @return {Promise<*>}
+ */
+exports.delete = async (req, res) => {
+    //  IMPORTANT: in frontend -> delete token from local storage
+
+    // Check if it arrives request.
+    if (!req.body) {
+        return res.status(403).send({
+            status: "error",
+            message: "ERROR. Can´t received request.",
+        });
+    }
+
+    try{
+        // get logged users && userId for delete
+        let token = req.headers.authorization;
+        let identity = await jwt.getIdentity(token);
+        if (identity.error) {
+            return res.status(404).send({
+                status: "error",
+                error: true,
+                message: "Error when try get identity user info : " + error,
+            });
+        }
+
+        // TODO: Delete all comments && Delete all topics of this user
+        // Delete all comments
+        // Delete all topics of this user
+
+        // delete user
+        const userDeleted = await User.findOneAndDelete({_id: identity._id, userId: identity.userId});
+
+        return res.status(200).send({
+            status: "success",
+            error: false,
+            message: "User account deleted successful",
+            //user: userDeleted,
+        });
+
+
+    }catch (error) {
+        console.error("delete user:", error);
+        return res.status(500).send({
+            status: "error",
+            error: true,
+            message: "Error when try delete user account : " + error,
+        });
+    }
+
+
 };

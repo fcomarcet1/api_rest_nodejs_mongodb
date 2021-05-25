@@ -17,6 +17,7 @@ router.get(
 );
 router.get("/edit",[cleanBody, AuthMiddleware.verifyAuth,], UserController.edit);
 router.put("/edit", [cleanBody, AuthMiddleware.verifyAuth,], UserController.update);
+router.delete("/delete",[cleanBody, AuthMiddleware.verifyAuth], UserController.delete);
 
 
 
