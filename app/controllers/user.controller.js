@@ -59,7 +59,12 @@ exports.show = async (req, res) => {
 
 };
 
-
+/**
+ * @description Get user list only ROLE_ADMIN.
+ * @param req
+ * @param res
+ * @return {Promise<*>}
+ */
 exports.getAll = async (req, res) => {
 
     // Check request.
@@ -102,6 +107,96 @@ exports.getAll = async (req, res) => {
             status: "error",
             error: true,
             message: "Error when try show all users list: " + error,
+        });
+    }
+};
+
+/**
+ * @description Get user data for fill update user account
+ * @param req
+ * @param res
+ * @return {Promise<void>}
+ */
+exports.edit = async (req, res) => {
+
+    // Check request.
+    if (!req.body) {
+        return res.status(403).send({
+            status: "error",
+            error: true,
+            message: "ERROR. API can´t received the request.",
+        });
+    }
+
+    try {
+
+        // get token from headers
+        const authToken = req.headers.authorization;
+
+        // Get data from user
+        const identity = await jwt.getIdentity(authToken);
+
+        // Unset fields from user
+        identity.role  = undefined;
+        identity.active = undefined;
+        identity.resetPasswordToken = undefined;
+        identity.resetPasswordExpires = undefined;
+        identity.emailTokenExpires = undefined;
+        identity.emailToken = undefined;
+        identity.referrer = undefined;
+        identity.password = undefined;
+        identity.accessToken = undefined;
+        identity.referralCode = undefined;
+        identity.__v = undefined;
+        identity._id = undefined;
+
+        // Return response
+        return res.status(200).send({
+            status: "success",
+            error: false,
+            message: "Edit user",
+            user: identity,
+        });
+
+    }catch (error) {
+        console.error("edit user:", error);
+        return res.status(500).send({
+            status: "error",
+            error: true,
+            message: "Error when try show data user for edit: " + error,
+        });
+    }
+};
+
+/**
+ * @description Update and save new user data
+ * @param req
+ * @param res
+ * @return {Promise<void>}
+ */
+exports.update = async (req, res) => {
+
+    // Check request.
+    if (!req.body) {
+        return res.status(403).send({
+            status: "error",
+            error: true,
+            message: "ERROR. API can´t received the request.",
+        });
+    }
+
+    try {
+        return res.status(200).send({
+            status: "success",
+            error: false,
+            message: "update method",
+        });
+    }catch (error) {
+        console.error("edit user:", error);
+        return res.status(500).send({
+            status: "error",
+            error: true,
+            message: "Error when try update data user : " + error,
         });
     }
 };
