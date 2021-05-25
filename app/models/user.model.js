@@ -38,7 +38,8 @@ const userSchema = new Schema(
         },
         image: {
             type: String,
-            trim: true
+            trim: true,
+            default: null,
         },
         active: {
             type: Boolean,

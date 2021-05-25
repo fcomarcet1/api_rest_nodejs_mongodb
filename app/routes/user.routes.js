@@ -6,7 +6,7 @@ const router = express.Router();
 const UserController = require("../controllers/user.controller");
 const cleanBody = require("../middlewares/cleanBody");
 const AuthMiddleware = require("../middlewares/verifyAuth");
-const RoleMiddleware = require("../middlewares/verifyRoles");
+const RoleMiddleware = require("../middlewares/verifyRole");
 
 //*********************************** ROUTES ***********************************
 router.get("/profile", [cleanBody, AuthMiddleware.verifyAuth], UserController.show);

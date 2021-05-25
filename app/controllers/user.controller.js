@@ -305,6 +305,14 @@ exports.update = async (req, res) => {
                     {new: true}
                 );
 
+                if (userUpdated == null){
+                    return res.status(400).send({
+                        status: "error",
+                        error: true,
+                        message: "server cant update user: ",
+                    });
+                }
+
                 // Unset object keys
                 userUpdated.role = undefined;
                 userUpdated.active = undefined;

@@ -11,11 +11,15 @@ const bodyParser = require("body-parser");
 const app = express();
 process.env.TZ = "Europe/Madrid";
 
+// public folder (css, js)
+app.use(express.static('public'));
+
+
 // **************** LOAD FILE ROUTES ************************
 //var adminRoutes = require("./app/routes/admin.routes");
 const authRoutes = require("./app/routes/auth.routes");
-var userRoutes = require("./app/routes/user.routes");
-//var uploadRoutes = require("./app/routes/upload.routes")
+const userRoutes = require("./app/routes/user.routes");
+const uploadRoutes = require("./app/routes/upload.routes");
 
 
 // ******************* MIDDLEWARES ******************************
@@ -52,7 +56,7 @@ app.get("/server-info", (req, res) => {
 //app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
-//app.use("/api/upload", uploadRoutes);
+app.use("/api/upload", uploadRoutes);
 
 
 // Export module
