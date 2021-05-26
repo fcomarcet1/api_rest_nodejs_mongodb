@@ -290,7 +290,7 @@ exports.validateAccount = async (req, res) => {
                 message: " El email introducido no pertenece a ningun usuario",
             });
         }
-        console.log(checkEmail);
+
         /*const checkEmail = await User.findOne(
             {email: email.toLowerCase()},
             (err, email) => {
@@ -319,7 +319,7 @@ exports.validateAccount = async (req, res) => {
             emailTokenExpires: {$gt: Date.now()},
         });
 
-        if (!user) {
+        if (!user || Object.keys(user).length === 0) {
             return res.status(400).json({
                 status: "error",
                 error: true,

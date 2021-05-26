@@ -27,13 +27,13 @@ const TopicSchema = new Schema(
             type: String,
             trim: true,
             required: [true, "can't be blank"],
-            match: [/^[a-zA-Z0-9 ]+$/, "is invalid"],
+            match: [/^[a-zA-Z0-9*/@{}<>. ]+$/, "is invalid"],
         },
         content: {
             type: String,
             trim: true,
             required: [true, "can't be blank"],
-            match: [/^[a-zA-Z0-9 ]+$/, "is invalid"],
+            //match: [/^[a-zA-Z0-9*/@{}<>. ]+$/, "is invalid"],
         },
         code: {
             type: String,

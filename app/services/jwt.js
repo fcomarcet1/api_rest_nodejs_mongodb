@@ -25,11 +25,10 @@ exports.createAuthToken = async (user) => {
         };
 
         // Return token
-        return await jwt.sign(payload, process.env.JWT_SECRET);
+        let authToken = await jwt.sign(payload, process.env.JWT_SECRET);
 
-        /*return {
-            authToken: authToken
-        };*/
+        return authToken;
+
 
     } catch (error) {
         console.error("create Auth Token-error", error);
@@ -39,19 +38,13 @@ exports.createAuthToken = async (user) => {
             message: "create auth token error: " + error,
         };
     }
-    /*
-    * await jwt.sign({
-        data: 'foobar'
-        },
-        'secret',
-        { expiresIn: '1h' }
-      );
-* */
+
 };
 
 
-//TODO: ACABAR use in middleware verifyAuth
+
 /**
+ * @deprecated DEPRECADED: NO SE USA FINALMENTE
  * @description Check if token is valid(expiration time, token_id).
  * @param token
  * @return {Promise<{error: boolean}>}
@@ -59,8 +52,6 @@ exports.createAuthToken = async (user) => {
 exports.verifyToken = async (token) => {
 
     try {
-        // verify,
-
         // comprobar que es valido con el secreto
         let decodedToken = await jwt.verify(token, process.env.JWT_SECRET);
         let userId = decodedToken.userId;
@@ -93,7 +84,7 @@ exports.verifyToken = async (token) => {
             status: "success",
             error: false,
             message: "Token verified successful",
-            authToken: decodedToken,
+            //authToken: decodedToken,
         }
 
     } catch (error) {
@@ -110,20 +101,21 @@ exports.verifyToken = async (token) => {
 /**
  *
  * @param token
- * @return {Promise<{error: boolean, message, status: string}>}
+ * @return {Promise<*>}
  */
 exports.getIdentity = async (token) => {
 
     try {
         // Check if token is valid and decode token with verify
-        let authToken = await jwt.verify(token, process.env.JWT_SECRET);
+        //let authToken = await jwt.verify(token, process.env.JWT_SECRET);
+        let authToken = await jwt.decode(token, process.env.JWT_SECRET);
+
         let documentId = authToken.sub;
         let userId = authToken.userId;
 
         // Get user info
-        const user = await User.findOne({_id: documentId, userId: userId});
+        let user = await User.findOne({_id: documentId, userId: userId});
         if (!user) {
-            console.log("Error al obtener user info getIdentityt()");
             return {
                 status: "error",
                 error: true,
@@ -143,6 +135,9 @@ exports.getIdentity = async (token) => {
         user.referralCode = undefined;
 
         // return user
+        /*console.log("retuen identity");
+        console.log(user);*/
+
         return user;
 
     } catch (error) {
@@ -153,16 +148,5 @@ exports.getIdentity = async (token) => {
             message: error,
         };
     }
-
-    /* try {
-
-     } catch (error) {
-         console.error("decode Auth Token error: ", error);
-         return {
-             status: "error",
-             error: true,
-             message: error,
-         };
-     }*/
 
 };

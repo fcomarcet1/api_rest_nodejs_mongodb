@@ -1,6 +1,8 @@
 'use strict';
-
+const Topic = require("../models/topic.model");
+const jwtService = require("../services/jwt");
 const validator = require("validator");
+const {v4: uuidv4} = require('uuid');
 
 /**
  * @description Create new topic
@@ -10,6 +12,7 @@ const validator = require("validator");
  */
 exports.create = async (req, res) => {
 
+    // Check request
     if (!req.body) {
         return res.status(403).send({
             status: "error",
@@ -28,10 +31,9 @@ exports.create = async (req, res) => {
         });
     }
 
-    try{
+    try {
 
         let params = req.body;
-        //console.log(validator.isEmpty(params.title));
 
         // Trim data
         params.title.trim();
@@ -70,21 +72,73 @@ exports.create = async (req, res) => {
             });
         }
 
-        /*let validateValidContent = validator.isAlpha(validator.blacklist(name, " ")); // ok-> true
-        if (!validateValidContent) {
+        // Language
+        let validateEmptyLanguage = validator.isEmpty(params.language); // empty->true
+        if (validateEmptyLanguage) {
+            return res.status(400).send({
+                status: "error",
+                error: true,
+                message: "El campo contenido puede estar vacio.",
+            });
+        }
+
+        // Code Optional
+        /*let validateValidCode = validator.isAlpha(validator.blacklist(params.code, " ")); // ok-> true
+        if (!validateValidCode) {
             return res.status(400).send({
                 status: "error",
                 error: "El campo contenido no es valido no puede contener numeros.",
             });
         }*/
 
+        // Crear objeto a guardar
+        let topic = new Topic();
 
+        // Get user id
+        let token = req.headers.authorization;
+        
+        let identity = await jwtService.getIdentity(token);
+        if (identity.error || Object.keys(identity).length === 0 ) {
+            return res.status(404).send({
+                status: "error",
+                error: true,
+                message: "Error cant create new topic",
+            });
+        }
+
+        // Asignar valores
+        topic.title = params.title;
+        topic.content = params.content;
+        topic.code = params.code;
+        topic.lang = params.language;
+        topic.user = identity._id;
+
+        // Guardar el topic
+        let topicSaved = await topic.save();
+
+        if (!topicSaved || Object.keys(topicSaved).length === 0){
+            return res.status(404).send({
+                status: "error",
+                error: true,
+                message: "Error cant create new topic",
+            });
+        }
+
+
+        // Return response.
         return res.status(201).send({
             status: "success",
             error: false,
             message: "Topic created successful",
-        });
-    }catch (error) {
+            topicSaved: topicSaved,
 
+        });
+    } catch (error) {
+        console.error("create topic:", error);
+        return res.status(500).send({
+            status: "error",
+            error: true,
+            message: "Error when try create new topic: " + error,
+        });
     }
 };

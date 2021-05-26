@@ -20,6 +20,7 @@ app.use(express.static('public'));
 const authRoutes = require("./app/routes/auth.routes");
 const userRoutes = require("./app/routes/user.routes");
 const uploadRoutes = require("./app/routes/upload.routes");
+const topicRoutes = require("./app/routes/topic.routes");
 
 
 // ******************* MIDDLEWARES ******************************
@@ -57,6 +58,8 @@ app.get("/server-info", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/topic", topicRoutes);
+
 
 
 // Export module
