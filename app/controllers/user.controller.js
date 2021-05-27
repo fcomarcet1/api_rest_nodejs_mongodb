@@ -13,14 +13,6 @@ const moment = require("moment");
 exports.show = async (req, res) => {
 
     try {
-        // Check request.
-        if (!req.body) {
-            return res.status(403).send({
-                status: "error",
-                message: "ERROR. API can´t received the request.",
-            });
-        }
-
         // get token from headers
         const token = req.headers.authorization;
 
@@ -76,15 +68,6 @@ exports.show = async (req, res) => {
  */
 exports.getAll = async (req, res) => {
 
-    // Check request.
-    if (!req.body) {
-        return res.status(403).send({
-            status: "error",
-            error: true,
-            message: "ERROR. API can´t received the request.",
-        });
-    }
-
     try {
         const users = await User.find();
         if (!users) {
@@ -127,15 +110,6 @@ exports.getAll = async (req, res) => {
  * @return {Promise<*>}
  */
 exports.edit = async (req, res) => {
-
-    // Check request.
-    if (!req.body) {
-        return res.status(403).send({
-            status: "error",
-            error: true,
-            message: "ERROR. API can´t received the request.",
-        });
-    }
 
     try {
 

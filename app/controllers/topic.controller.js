@@ -1,7 +1,7 @@
 'use strict';
-const Topic = require("../models/topic.model");
-const jwtService = require("../services/jwt");
-const validator = require("validator");
+const Topic = require('../models/topic.model');
+const jwtService = require('../services/jwt');
+const validator = require('validator');
 const {v4: uuidv4} = require('uuid');
 
 /**
@@ -11,28 +11,29 @@ const {v4: uuidv4} = require('uuid');
  * @return {Promise<*>}
  */
 exports.create = async (req, res) => {
-
     // Check request
     if (!req.body) {
         return res.status(403).send({
-            status: "error",
+            status: 'error',
             error: true,
-            message: "ERROR. API can´t received the request.",
+            message: 'ERROR. API can´t received the request.',
         });
     }
 
     // check if not send any required field
-    if (req.body.title === undefined || req.body.content === undefined ||
-        req.body.code === undefined || req.body.language === undefined
+    if (
+        req.body.title === undefined ||
+        req.body.content === undefined ||
+        req.body.code === undefined ||
+        req.body.language === undefined
     ) {
         return res.status(403).send({
-            status: "error",
-            message: "ERROR. Any field from create topic form not received.",
+            status: 'error',
+            message: 'ERROR. Any field from create topic form not received.',
         });
     }
 
     try {
-
         let params = req.body;
 
         // Trim data
@@ -41,24 +42,26 @@ exports.create = async (req, res) => {
         params.code.trim();
         params.language.trim();
 
-
         // validate fields
         // Title
         let validateEmptyTitle = validator.isEmpty(params.title); // empty->true
         if (validateEmptyTitle) {
             return res.status(400).send({
-                status: "error",
+                status: 'error',
                 error: true,
-                message: "El campo titulo puede estar vacio.",
+                message: 'El campo titulo puede estar vacio.',
             });
         }
 
-        let validateValidTitle = validator.isAlphanumeric(validator.blacklist(params.title, " */@{}<>.")); // ok-> true
+        let validateValidTitle = validator.isAlphanumeric(
+            validator.blacklist(params.title, ' */@{}<>.')
+        ); // ok-> true
         if (!validateValidTitle) {
             return res.status(400).send({
-                status: "error",
+                status: 'error',
                 error: true,
-                message: "El campo titulo no es valido no no introduzcas caracteres especiales.",
+                message:
+                    'El campo titulo no es valido no no introduzcas caracteres especiales.',
             });
         }
 
@@ -66,9 +69,9 @@ exports.create = async (req, res) => {
         let validateEmptyContent = validator.isEmpty(params.content); // empty->true
         if (validateEmptyContent) {
             return res.status(400).send({
-                status: "error",
+                status: 'error',
                 error: true,
-                message: "El campo contenido puede estar vacio.",
+                message: 'El campo contenido puede estar vacio.',
             });
         }
 
@@ -76,9 +79,9 @@ exports.create = async (req, res) => {
         let validateEmptyLanguage = validator.isEmpty(params.language); // empty->true
         if (validateEmptyLanguage) {
             return res.status(400).send({
-                status: "error",
+                status: 'error',
                 error: true,
-                message: "El campo contenido puede estar vacio.",
+                message: 'El campo contenido puede estar vacio.',
             });
         }
 
@@ -96,13 +99,13 @@ exports.create = async (req, res) => {
 
         // Get user id
         let token = req.headers.authorization;
-        
+
         let identity = await jwtService.getIdentity(token);
-        if (identity.error || Object.keys(identity).length === 0 ) {
+        if (identity.error || Object.keys(identity).length === 0) {
             return res.status(404).send({
-                status: "error",
+                status: 'error',
                 error: true,
-                message: "Error cant create new topic",
+                message: 'Error cant create new topic',
             });
         }
 
@@ -116,29 +119,188 @@ exports.create = async (req, res) => {
         // Guardar el topic
         let topicSaved = await topic.save();
 
-        if (!topicSaved || Object.keys(topicSaved).length === 0){
+        if (!topicSaved || Object.keys(topicSaved).length === 0) {
             return res.status(404).send({
-                status: "error",
+                status: 'error',
                 error: true,
-                message: "Error cant create new topic",
+                message: 'Error cant create new topic',
             });
         }
 
-
         // Return response.
         return res.status(201).send({
-            status: "success",
+            status: 'success',
             error: false,
-            message: "Topic created successful",
+            message: 'Topic created successful',
             topicSaved: topicSaved,
-
         });
     } catch (error) {
-        console.error("create topic:", error);
+        console.error('create topic:', error);
         return res.status(500).send({
-            status: "error",
+            status: 'error',
             error: true,
-            message: "Error when try create new topic: " + error,
+            message: 'Error when try create new topic: ' + error,
+        });
+    }
+};
+
+/**
+ * @description Get a list of topics.
+ * @param  req
+ * @param  res
+ * @return {Promise<*>}
+ */
+exports.getTopics = async (req, res) => {
+
+    try {
+        const topics = await Topic.find();
+        if (!topics || Object.keys(topics).length === 0) {
+            return res.status(404).send({
+                status: 'error',
+                error: true,
+                message: 'No existen topics actualmente.',
+            });
+        }
+
+        // Unset fields from topics
+        topics.forEach((value) => {
+            value['__v'] = undefined;
+        });
+
+        // Return response
+        return res.status(200).send({
+            status: 'success',
+            error: false,
+            topics: topics,
+        });
+    } catch (error) {
+        console.error('show all topics:', error);
+        return res.status(500).send({
+            status: 'error',
+            error: true,
+            message: 'Error when try show all topics list: ' + error,
+        });
+    }
+};
+
+/**
+ * @description Get a list of topics paginate.
+ * @param  req
+ * @param  res
+ * @return {Promise<*>}
+ */
+exports.getTopicsPaginate = async (req, res) => {
+
+    try {
+        //Cargar libreria paginacion (topic model) -> require + load plugin
+
+        // If we do not indicate the page by parameter(GET) -> get default page = 1
+        var page;
+        if (!req.params.page || req.params.page === 0 || req.params.page === "0" ||
+            req.params.page === null || req.params.page === undefined || isNaN(req.params.page)
+        ) {
+            page = 1;
+        } else {
+            page = await parseInt(req.params.page);
+        }
+
+        // Paginate options
+        var options = {
+            sort: {date: -1}, //
+            populate: 'user', // Paths which should be populated with other documents
+            limit: 5, // nº de elementos por pagina
+            page: page // nº de pagina
+        };
+
+        //find paginado
+        const topics = await Topic.paginate({}, options);
+
+        // return (topics, total de topics, total de paginas)
+        return res.status(200).send({
+            status: 'success',
+            error: false,
+            message: "Topic paginated list",
+            page: page,
+            topics: topics.docs,
+            totalDocs: topics.totalDocs,
+            totalPages: topics.totalPages
+        });
+
+
+    } catch (error) {
+        console.error('show all topics paginate:', error);
+        return res.status(500).send({
+            status: 'error',
+            error: true,
+            message: 'Error when try show all topics paginate list: ' + error,
+        });
+    }
+
+
+};
+
+/**
+ * @description Get topics by user
+ * @param req
+ * @param res
+ * @return {Promise<*>}
+ */
+exports.getTopicsByUser = async (req, res) => {
+
+    try{
+
+        let userId = await req.params.userId;
+
+        const topicsByUser = await Topic.find({user: userId}).sort([['date', 'descending']]);
+
+        if (topicsByUser === null || Object.keys(topicsByUser) === 0) {
+            return res.status(200).send({
+                status: 'success',
+                error: false,
+                message: "No existen topics de ese usuario",
+
+            });
+        }
+
+        return res.status(200).send({
+            status: 'success',
+            error: false,
+            message: "Topics by user",
+            params: userId,
+            topics: topicsByUser
+        });
+
+
+    }catch (error) {
+        console.error('show all topics by user:', error);
+        return res.status(500).send({
+            status: 'error',
+            error: true,
+            message: 'Error when try show all topics by user: ' + error,
+        });
+    }
+};
+
+/**
+ * @description Get topic detail.
+ * @param req
+ * @param res
+ * @return {Promise<void>}
+ */
+exports.getTopicDetail = async (req, res) => {
+    try{
+        return res.status(200).send({
+            status: 'success',
+            error: false,
+            message: "Topic detail",
+
+        });
+    }catch (error) {
+        console.error('show topic detail:', error);
+        return res.status(500).send({
+            status: 'error',
+            error: true,
+            message: 'Error when try show topic detail: ' + error,
         });
     }
 };

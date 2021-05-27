@@ -67,7 +67,7 @@ exports.verifyToken = async (token) => {
             return {
                 status: "error",
                 error: true,
-                message: "Token not valid:",
+                message: "Unauthorized. Token not valid:",
             };
         }
 
@@ -76,14 +76,14 @@ exports.verifyToken = async (token) => {
             return {
                 status: "error",
                 error: true,
-                message: "Token is expired",
+                message: "Unauthorized. Token is expired",
             }
         }
 
         return {
             status: "success",
             error: false,
-            message: "Token verified successful",
+            message: "Unauthorized. Token verified successful",
             //authToken: decodedToken,
         }
 

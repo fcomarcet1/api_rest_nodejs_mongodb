@@ -23,7 +23,12 @@
     -EDIT: Update user account (PUT) http://localhost:3099/api/user/edit
         -Inputs: [name, surname, email]
 
-    
+##TOPICS
+    -CREATE NEW TOPIC: (POST) http://localhost:3099/api/topic/create
+    -GET ALL TOPICS: Topic list [ROLE_ADMIN]: (GET) http://localhost:3099/api/topic/list
+    -GET ALL  TOPICS PAGINATE: Topic list : (GET) http://localhost:3099/api/topics/all/:page?
+    -GET ALL BY USER: Topic list by user : (GET) http://localhost:3099/api/topics/user/:userId
+
 
 ##ADMIN
     -REGISTER: (POST) //localhost:3099/api/auth/register

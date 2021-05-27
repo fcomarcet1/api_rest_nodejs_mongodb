@@ -58,7 +58,7 @@ app.get("/server-info", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/upload", uploadRoutes);
-app.use("/api/topic", topicRoutes);
+app.use("/api", topicRoutes);
 
 
 

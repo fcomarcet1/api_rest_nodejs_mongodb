@@ -1,8 +1,10 @@
 "use strict";
 
 const mongoose = require("mongoose");
+const mongoosePaginate = require("mongoose-paginate-v2")
 const uniqueValidator = require("mongoose-unique-validator");
 const Schema = mongoose.Schema;
+
 
 // Comment Model
 const CommentSchema = new Schema(
@@ -49,6 +51,21 @@ const TopicSchema = new Schema(
     {timestamps: true}
 );
 
-TopicSchema.plugin(uniqueValidator, {message: "is already taken."});
 
+// Do not show fields with private information
+TopicSchema.methods.toJSON = function () {
+    let obj = this.toObject();
+
+    delete obj.__v ;
+    /*delete obj.resetPasswordToken;
+    delete obj.resetPasswordExpires;*/
+
+    return obj;
+}
+
+// Load plugins
+TopicSchema.plugin(uniqueValidator, {message: "is already taken."});
+TopicSchema.plugin(mongoosePaginate);
+
+// Export schema
 module.exports = mongoose.model("Topic", TopicSchema);

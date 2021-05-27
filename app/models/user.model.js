@@ -94,6 +94,18 @@ const userSchema = new Schema(
     }
 );
 
+// Do not show fields with private information
+userSchema.methods.toJSON = function () {
+    let obj = this.toObject();
+
+    delete obj.password;
+    delete obj.__v ;
+    /*delete obj.resetPasswordToken;
+    delete obj.resetPasswordExpires;*/
+
+    return obj;
+}
+
 /*const UserSchema = new Schema(
     {
         name: {
@@ -135,7 +147,6 @@ const userSchema = new Schema(
     { timestamps: true }
 );*/
 
-// TODO: REVISAR SI FALLA AL UPDATE USER
 userSchema.plugin(uniqueValidator, { message: "is already taken." });
 
 

@@ -12,7 +12,11 @@ const RoleMiddleware = require("../middlewares/verifyRole");
 router.get("/profile", [cleanBody, AuthMiddleware.verifyAuth], UserController.show);
 router.get(
     "/all",
-    [cleanBody, AuthMiddleware.verifyAuth, RoleMiddleware.checkRoleAdmin],
+    [
+        cleanBody,
+        AuthMiddleware.verifyAuth,
+        RoleMiddleware.checkRoleAdmin
+    ],
     UserController.getAll
 );
 router.get("/edit",[cleanBody, AuthMiddleware.verifyAuth,], UserController.edit);
