@@ -42,7 +42,7 @@ exports.verifyAuth = async (req, res, next) => {
             return res.status(404).send({
                 status: "error",
                 error: true,
-                message: "Token not valid:",
+                message: "Unauthorized. Token not valid.",
             });
         }
 
@@ -51,7 +51,7 @@ exports.verifyAuth = async (req, res, next) => {
             return res.status(404).send({
                 status: "error",
                 error: true,
-                message: 'Token expired'
+                message: 'Unauthorized. Token expired'
             });
         }
 
@@ -79,7 +79,7 @@ exports.verifyAuth = async (req, res, next) => {
             return res.status(403).send({
                 status: "error",
                 error: true,
-                message: "Invalid token. Unauthorized",
+                message: "Unauthorized. Invalid token.",
             });
         }
 

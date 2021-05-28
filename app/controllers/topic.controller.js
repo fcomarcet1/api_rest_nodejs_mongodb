@@ -1,8 +1,11 @@
 'use strict';
+
 const Topic = require('../models/topic.model');
 const jwtService = require('../services/jwt');
 const validator = require('validator');
 const {v4: uuidv4} = require('uuid');
+const moment = require('moment');
+
 
 /**
  * @description Create new topic
@@ -110,6 +113,7 @@ exports.create = async (req, res) => {
         }
 
         // Asignar valores
+        topic.topicId = uuidv4();
         topic.title = params.title;
         topic.content = params.content;
         topic.code = params.code;
@@ -247,13 +251,13 @@ exports.getTopicsPaginate = async (req, res) => {
  */
 exports.getTopicsByUser = async (req, res) => {
 
-    try{
+    try {
 
         let userId = await req.params.userId;
 
-        const topicsByUser = await Topic.find({user: userId}).sort([['date', 'descending']]);
+        const topicsByUser = await Topic.find({user: userId}).sort([['createdAt', 'descending']]);
 
-        if (topicsByUser === null || Object.keys(topicsByUser) === 0) {
+        if (topicsByUser === null || Object.keys(topicsByUser) === 0 || topicsByUser.length === 0) {
             return res.status(200).send({
                 status: 'success',
                 error: false,
@@ -267,11 +271,12 @@ exports.getTopicsByUser = async (req, res) => {
             error: false,
             message: "Topics by user",
             params: userId,
-            topics: topicsByUser
+            topics: topicsByUser,
+            length: topicsByUser.length,
         });
 
 
-    }catch (error) {
+    } catch (error) {
         console.error('show all topics by user:', error);
         return res.status(500).send({
             status: 'error',
@@ -285,22 +290,171 @@ exports.getTopicsByUser = async (req, res) => {
  * @description Get topic detail.
  * @param req
  * @param res
- * @return {Promise<void>}
+ * @return {Promise<*>}
  */
 exports.getTopicDetail = async (req, res) => {
-    try{
+    try {
+        // Check GET parameter topic id(_id document).
+        if (!req.params.topicId) {
+            return res.status(400).send({
+                status: 'error',
+                error: true,
+                message: "Cannot received GET userId parameter",
+            });
+        }
+
+        // Get topic Id
+        let topicId = req.params.topicId;
+
+        // Find topic in DB
+        let topic = await Topic.findOne({topicId: topicId})
+            .sort([['createdAt', 'descending']])
+            .populate('user')
+        ;
+
+        if (!topic || Object.keys(topic).length === 0 || topic.length === 0) {
+            return res.status(400).send({
+                status: 'error',
+                error: true,
+                message: "Not exists topic",
+            });
+        }
+
+        // Return response
         return res.status(200).send({
             status: 'success',
             error: false,
             message: "Topic detail",
-
+            topicId: topicId,
+            topic: topic,
         });
-    }catch (error) {
+
+
+    } catch (error) {
         console.error('show topic detail:', error);
         return res.status(500).send({
             status: 'error',
             error: true,
             message: 'Error when try show topic detail: ' + error,
+        });
+    }
+};
+
+/**
+ * @description Update topic.
+ * @param req
+ * @param res
+ * @return {Promise<*>}
+ */
+exports.update = async (req, res) => {
+
+    // Check request
+    if (!req.body) {
+        return res.status(403).send({
+            status: 'error',
+            error: true,
+            message: 'ERROR. API can´t received the request.',
+        });
+    }
+    // check if not send any required field
+    if (
+        req.body.title === undefined ||
+        req.body.content === undefined ||
+        req.body.code === undefined ||
+        req.body.language === undefined
+    ) {
+        return res.status(403).send({
+            status: 'error',
+            message: 'ERROR. Any field from create topic form not received.',
+        });
+    }
+
+    try {
+        // Recoger el id del topic de la url
+        let topicId =  await req.params.topicId.toString();
+
+        // Recoger los datos que llegan desde post
+        let params = req.body;
+
+        let validateEmptyTitle = validator.isEmpty(params.title); // empty->true
+        if (validateEmptyTitle) {
+            return res.status(400).send({
+                status: 'error',
+                error: true,
+                message: 'El campo titulo puede estar vacio.',
+            });
+        }
+
+        let validateValidTitle = validator.isAlphanumeric(
+            validator.blacklist(params.title, ' */@{}<>.')
+        ); // ok-> true
+        if (!validateValidTitle) {
+            return res.status(400).send({
+                status: 'error',
+                error: true,
+                message:
+                    'El campo titulo no es valido no no introduzcas caracteres especiales.',
+            });
+        }
+
+        // Content
+        let validateEmptyContent = validator.isEmpty(params.content); // empty->true
+        if (validateEmptyContent) {
+            return res.status(400).send({
+                status: 'error',
+                error: true,
+                message: 'El campo contenido puede estar vacio.',
+            });
+        }
+
+        // Language
+        let validateEmptyLanguage = validator.isEmpty(params.language); // empty->true
+        if (validateEmptyLanguage) {
+            return res.status(400).send({
+                status: 'error',
+                error: true,
+                message: 'El campo contenido puede estar vacio.',
+            });
+        }
+
+        // Find and update del topic por id y por id de usuario
+        let token = req.headers.authorization;
+        let identity = await jwtService.getIdentity(token);
+
+        params.updatedAt = moment().format();
+
+        let topicUpdated = await Topic.findOneAndUpdate(
+            {_id: topicId, user: identity._id},
+            params,
+            {new: true}
+        );
+
+        if (
+            !topicUpdated ||
+            Object.keys(topicUpdated).length === 0 ||
+            topicUpdated.length === 0
+        ){
+            return res.status(400).send({
+                status: 'error',
+                error: true,
+                message: 'Error al actualizar el topic.',
+            });
+        }
+
+        // Return response
+        return res.status(200).send({
+            status: 'success',
+            error: false,
+            message: "Topic update",
+            topicUpdated: topicUpdated,
+        });
+
+    } catch (error) {
+        console.error('update topic error:', error);
+        return res.status(500).send({
+            status: 'error',
+            error: true,
+            message: 'Error when try update topic: ' + error,
         });
     }
 };

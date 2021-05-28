@@ -22,7 +22,10 @@ router.get('/topics/all/:page?', [cleanBody, AuthMiddleware.verifyAuth], TopicCo
 router.get('/topics/user/:userId',[cleanBody, AuthMiddleware.verifyAuth], TopicController.getTopicsByUser);
 
 // Topic detail
-router.get('/topic/:topicId', [cleanBody, AuthMiddleware.verifyAuth], TopicController.getTopicDetail);
+router.get('/topic/detail/:topicId', [cleanBody, AuthMiddleware.verifyAuth], TopicController.getTopicDetail);
+
+// Topic update.
+router.put('/topic/update/:topicId', [cleanBody, AuthMiddleware.verifyAuth], TopicController.update);
 
 
 module.exports = router;

@@ -25,6 +25,12 @@ var Comment = mongoose.model("Comment", CommentSchema);
 // Topic Model
 const TopicSchema = new Schema(
     {
+        topicId: {
+            type: String,
+            unique: true,
+            required: true,
+            trim: true,
+        },
         title: {
             type: String,
             trim: true,
