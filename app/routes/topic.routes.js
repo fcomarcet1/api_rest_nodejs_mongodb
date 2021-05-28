@@ -10,22 +10,45 @@ const RoleMiddleware = require("../middlewares/verifyRole");
 
 //******************************* ROUTES *******************************
 // Create new topic
-router.post('/topic/create', [cleanBody, AuthMiddleware.verifyAuth], TopicController.create);
+router.post('/topic/create',
+    [cleanBody, AuthMiddleware.verifyAuth],
+    TopicController.create
+);
 
 //List of all topics no paginate (ROLE_ADMIN)
-router.get('/topics/list', [cleanBody, AuthMiddleware.verifyAuth, RoleMiddleware.checkRoleAdmin], TopicController.getTopics);
+router.get('/topics/list',
+    [cleanBody, AuthMiddleware.verifyAuth, RoleMiddleware.checkRoleAdmin],
+    TopicController.getTopics
+);
 
 // List of all topics paginate
-router.get('/topics/all/:page?', [cleanBody, AuthMiddleware.verifyAuth], TopicController.getTopicsPaginate);
+router.get('/topics/all/:page?',
+    [cleanBody, AuthMiddleware.verifyAuth],
+    TopicController.getTopicsPaginate
+);
 
 // List topics by user
-router.get('/topics/user/:userId',[cleanBody, AuthMiddleware.verifyAuth], TopicController.getTopicsByUser);
+router.get('/topics/user/:userId',
+    [cleanBody, AuthMiddleware.verifyAuth],
+    TopicController.getTopicsByUser
+);
 
 // Topic detail
-router.get('/topic/detail/:topicId', [cleanBody, AuthMiddleware.verifyAuth], TopicController.getTopicDetail);
+router.get('/topic/detail/:topicId',
+    [cleanBody, AuthMiddleware.verifyAuth],
+    TopicController.getTopicDetail
+);
 
 // Topic update.
-router.put('/topic/update/:topicId', [cleanBody, AuthMiddleware.verifyAuth], TopicController.update);
+router.put('/topic/update/:topicId',
+    [cleanBody, AuthMiddleware.verifyAuth],
+    TopicController.update
+);
 
+// Topic delete
+router.delete('/topic/delete/:topicId',
+    [cleanBody, AuthMiddleware.verifyAuth],
+    TopicController.delete
+);
 
 module.exports = router;

@@ -458,3 +458,67 @@ exports.update = async (req, res) => {
         });
     }
 };
+
+
+/**
+ * @description Delete topic.
+ * @param req
+ * @param res
+ * @return {Promise<*>}
+ */
+exports.delete = async (req, res) => {
+
+    if (!req.params.topicId){
+        return res.status(400).send({
+            status: 'error',
+            error: true,
+            message: "Error not arrives Topic id",
+        });
+    }
+
+    try {
+        // Get URl param (GET)
+        let topicId = req.params.topicId.toString();
+        let identity = await jwtService.getIdentity(req.headers.authorization);
+
+        // Find and delete for topicID and userID
+        let topicDeleted = await Topic.findOneAndDelete({topicId: topicId, user: identity._id});
+
+        if (
+            !topicDeleted ||
+            Object.keys(topicDeleted).length === 0 ||
+            topicDeleted.length === 0
+        ) {
+            return res.status(400).send({
+                status: 'error',
+                error: true,
+                message: 'El topic que deseas eliminar no existe.',
+            });
+        }
+
+        // Return response
+        return res.status(200).send({
+            status: 'success',
+            error: false,
+            message: "Topic delete",
+            topicDeleted: topicDeleted,
+
+        });
+    }catch (error) {
+        console.error('delete topic error:', error);
+        return res.status(500).send({
+            status: 'error',
+            error: true,
+            message: 'Error when try delete topic: ' + error,
+        });
+    }
+
+
+
+
+
+
+
+
+
+};
