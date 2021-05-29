@@ -21,6 +21,7 @@ const authRoutes = require("./app/routes/auth.routes");
 const userRoutes = require("./app/routes/user.routes");
 const uploadRoutes = require("./app/routes/upload.routes");
 const topicRoutes = require("./app/routes/topic.routes");
+const commentRoutes = require("./app/routes/comment.routes");
 
 
 // ******************* MIDDLEWARES ******************************
@@ -59,6 +60,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api", topicRoutes);
+app.use("/api", commentRoutes);
 
 
 

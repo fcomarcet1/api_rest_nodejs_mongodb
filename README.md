@@ -40,7 +40,7 @@
     -UPDATE TOPIC: Topic update: (PUT) http://localhost:3099/api/topic/update/topicId
         -Inputs: [title, content, language, code]
 
-    -DELETE TOPIC 
+    -DELETE TOPIC Topoc delete (DELETE) http://localhost:3099/api/topic/delete/topicId
 
 ##COMMENTS
     -REGISTER: (POST) //localhost:3099/api/auth/register

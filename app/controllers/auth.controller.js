@@ -310,7 +310,6 @@ exports.validateAccount = async (req, res) => {
             }
         );*/
 
-        // TODO: Check possible errors query
         // check if confirmationCode is valid
         const user = await User.findOne({
             email: email,

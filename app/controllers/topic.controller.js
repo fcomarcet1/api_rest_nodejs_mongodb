@@ -5,6 +5,7 @@ const jwtService = require('../services/jwt');
 const validator = require('validator');
 const {v4: uuidv4} = require('uuid');
 const moment = require('moment');
+const mongoose = require('mongoose');
 
 
 /**
@@ -370,8 +371,19 @@ exports.update = async (req, res) => {
     }
 
     try {
+
+        let validTopicId = mongoose.Types.ObjectId.isValid(req.params.topicId);
+
+        if (!validTopicId){
+            return res.status(404).send({
+                status: 'error',
+                error: true,
+                message: 'This topic not exist: ' + error,
+            });
+        }
+
         // Recoger el id del topic de la url
-        let topicId =  await req.params.topicId.toString();
+        let topicId = await req.params.topicId.toString();
 
         // Recoger los datos que llegan desde post
         let params = req.body;
@@ -433,7 +445,7 @@ exports.update = async (req, res) => {
             !topicUpdated ||
             Object.keys(topicUpdated).length === 0 ||
             topicUpdated.length === 0
-        ){
+        ) {
             return res.status(400).send({
                 status: 'error',
                 error: true,
@@ -468,7 +480,7 @@ exports.update = async (req, res) => {
  */
 exports.delete = async (req, res) => {
 
-    if (!req.params.topicId){
+    if (!req.params.topicId) {
         return res.status(400).send({
             status: 'error',
             error: true,
@@ -504,7 +516,7 @@ exports.delete = async (req, res) => {
             topicDeleted: topicDeleted,
 
         });
-    }catch (error) {
+    } catch (error) {
         console.error('delete topic error:', error);
         return res.status(500).send({
             status: 'error',
@@ -514,11 +526,15 @@ exports.delete = async (req, res) => {
     }
 
 
+};
 
 
-
-
-
-
-
+/**
+ * @description Topic search.
+ * @param req
+ * @param res
+ * @return {Promise<*>}
+ */
+exports.search = async (req, res) => {
+    try {} catch (error) {}
 };
