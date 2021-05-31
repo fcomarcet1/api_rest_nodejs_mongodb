@@ -1,6 +1,7 @@
 # api-rest-nodejs-mongodb
 # ROUTES 
 ##AUTH
+
     -REGISTER: (POST) //localhost:3099/api/auth/register
         -Inputs: [name, surname, email, password]
 
@@ -43,14 +44,18 @@
     -DELETE TOPIC Topoc delete (DELETE) http://localhost:3099/api/topic/delete/topicId
 
 ##COMMENTS
-    -REGISTER: (POST) //localhost:3099/api/auth/register
-        -Inputs: [name, surname, email, password]
+    -CREATE COMMENT: (POST) http://localhost:3099/api/comment/create/topic/:topicId
+        -Input: [content]
 
-    -LOGIN: (POST) http://localhost:3099/api/auth/login
-        -Inputs: [email, password]
+    -UPDATE COMMENT: (PUT)  http://localhost:3099/api/comment/update/:commentId
+        -Input: [content]
+
+    -DELETE COMMENT (DELETE) http://localhost:3099/api/comment/delete/:topicId/:commentId
+
 
 ADMIN[ROLE_ADMIN]:
 -Admin profile: (GET)  http://localhost:3099/api/admin/profile
+
 -All users : (GET) http://localhost:3099/api/admin/users
 -User detail: (GET)
 -Delete user Account: (DELETE)

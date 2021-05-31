@@ -53,6 +53,7 @@ const TopicSchema = new Schema(
         },
         user: {type: Schema.ObjectId, ref: "User"},
         comments: [CommentSchema],
+        /*comments: {type: Schema.Types.ObjectId, ref: "Comment"}*/
     },
     {timestamps: true}
 );
@@ -60,11 +61,9 @@ const TopicSchema = new Schema(
 
 // Do not show fields with private information
 TopicSchema.methods.toJSON = function () {
-    let obj = this.toObject();
 
+    let obj = this.toObject();
     delete obj.__v ;
-    /*delete obj.resetPasswordToken;
-    delete obj.resetPasswordExpires;*/
 
     return obj;
 }
@@ -75,3 +74,4 @@ TopicSchema.plugin(mongoosePaginate);
 
 // Export schema
 module.exports = mongoose.model("Topic", TopicSchema);
+//module.exports = mongoose.model("Comment", CommentSchema);

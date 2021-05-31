@@ -2,7 +2,6 @@
 
 const mongoose = require("mongoose");
 
-// TODO: REVISAR SI FALLA AL UPDATE USER
 const uniqueValidator = require("mongoose-unique-validator");
 const configRoles = require("../config/roles.config")
 const Schema = mongoose.Schema;
@@ -146,7 +145,6 @@ userSchema.methods.toJSON = function () {
     },
     { timestamps: true }
 );*/
-
 userSchema.plugin(uniqueValidator, { message: "is already taken." });
 
 

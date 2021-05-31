@@ -91,7 +91,6 @@ exports.create = async (req, res) => {
         };
 
         // unset values
-
         /*comment.user.resetPasswordExpires = undefined;
         comment.user.emailToken = undefined;
         comment.user.emailTokenExpires = undefined;
@@ -104,7 +103,6 @@ exports.create = async (req, res) => {
 
         // save topic with comment
         const commentSaved = await topic.save();
-
         if (!commentSaved || Object.keys(commentSaved).length === 0 || commentSaved.length === 0) {
             return res.status(404).send({
                 status: 'error',
@@ -118,6 +116,11 @@ exports.create = async (req, res) => {
                 .populate('comments.user')
             ;
 
+            let comments = topic.comments;
+
+           /* await comments.forEach((listComments, index) =>{
+                console.log(listComments.content);
+            });*/
 
             //TODO: delete from topic personal information password...
 
@@ -126,6 +129,7 @@ exports.create = async (req, res) => {
                 status: 'success',
                 error: false,
                 message: 'Comment created successful',
+                //comments: comments,
                 topic: topic,
             });
         }
@@ -149,7 +153,95 @@ exports.create = async (req, res) => {
  * @param res
  * @return {Promise<*>}
  */
-exports.edit = async (req, res) => {
+exports.update = async (req, res) => {
+
+    if (!req.params.commentId || !req.body) {
+        return res.status(400).send({
+            status: 'error',
+            error: true,
+            message: "API Cannot received parameters",
+        });
+    }
+    try {
+        // Get params from url
+        let commentId = req.params.commentId;
+        let params = req.body;
+        let content = params.content;
+
+        // Check if exist topic
+        // for this we need change the route and add topicId /comment/update/:topicId/:commentId
+
+        // Check if exists comment && if user is the owner NO SE HACER QUERY
+        //let comment = await Topic.findById({ comments: commentId });
+
+        let validateEmptyContent = validator.isEmpty(content); // empty->true
+        if (validateEmptyContent) {
+            return res.status(400).send({
+                status: 'error',
+                error: true,
+                message: 'El comentario no puede estar vacio.',
+            });
+        }
+
+        let validateValidContent = validator.isAlphanumeric(
+            validator.blacklist(content, ' */@{}<>.')
+        );
+        if (!validateValidContent) {
+            return res.status(400).send({
+                status: 'error',
+                error: true,
+                message: 'El comentario no es valido, no introduzcas caracteres especiales.',
+            });
+        }
+
+        // Check if user is propietary of this comment
+        let identity = await jwtService.getIdentity(req.headers.authorization);
+
+        let comment = await Topic.findOne(
+            {
+                "comments._id": commentId,
+                "comments.user": identity._id
+            });
+
+        if (!comment || Object.keys(comment).length === 0 || comment.length === 0){
+            return res.status(400).send({
+                status: 'error',
+                error: true,
+                message: 'No puedes modificar un comentario que no eres propietario.',
+            });
+        }
+
+        // find and update subdocument
+        let commentUpdated = await Topic.findOneAndUpdate(
+            { "comments._id": commentId },
+            {
+                "$set": {
+                    "comments.$.content": content //con $ indicamos el commentId
+                }
+            },
+            {new:true}
+        );
+
+        // Return response.
+        return res.status(200).send({
+            status: 'success',
+            error: false,
+            message: 'Comment updated successful',
+            comment: comment,
+            commentUpdated: commentUpdated,
+        });
+
+    }catch (error){
+        console.error('update comment :', error);
+        return res.status(500).send({
+            status: 'error',
+            error: true,
+            message: 'Error when try update comment: ' + error,
+        });
+    }
+
+
+
 };
 
 

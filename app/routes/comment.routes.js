@@ -13,9 +13,24 @@ const RoleMiddleware = require("../middlewares/verifyRole");
 //******************************* ROUTES *******************************
 // Create new comment.
 router.post(
-    '/comment/topic/:topicId',
+    '/comment/create/topic/:topicId',
     [cleanBody, AuthMiddleware.verifyAuth],
     CommentController.create
 );
+
+// Update comment
+router.put(
+    '/comment/update/:commentId',
+    [cleanBody, AuthMiddleware.verifyAuth],
+    CommentController.update
+);
+
+// Update comment
+router.put(
+    '/comment/delete/:topicId/:commentId',
+    [cleanBody, AuthMiddleware.verifyAuth],
+    CommentController.delete
+);
+
 
 module.exports = router;
