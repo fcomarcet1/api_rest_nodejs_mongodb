@@ -252,4 +252,83 @@ exports.update = async (req, res) => {
  * @return {Promise<*>}
  */
 exports.delete = async (req, res) => {
+
+    if (!req.params.commentId || !req.params.topicId ) {
+
+        return res.status(400).send({
+            status: 'error',
+            error: true,
+            message: "API Cannot received parameters",
+        });
+    }
+
+    try {
+        // Sacar el id del topic y del comentario a borrar
+        let commentId = req.params.commentId;
+        let topicId = req.params.topicId;
+
+        // Buscar el topic
+        let issetTopic = await Topic.findById({_id: topicId});
+        if (!issetTopic || Object.keys(issetTopic).length === 0 || issetTopic.length === 0){
+            return res.status(404).send({
+                status: 'error',
+                error: true,
+                message: 'This topic not exists',
+            });
+        }
+
+        // Comprobar que el usuario es el propietario.
+        let identity = await jwtService.getIdentity(req.headers.authorization);
+
+        let topic = await Topic.findOne(
+            {
+                "comments._id": commentId,
+                "comments.user": identity._id
+            });
+
+        if (!topic || Object.keys(topic).length === 0 || topic.length === 0){
+            return res.status(400).send({
+                status: 'error',
+                error: true,
+                message: 'No puedes eliminar un comentario del cual no eres propietario.',
+            });
+        }
+        // Seleccionar el subdocumento (comentario)
+        let comment = topic.comments.id(commentId);
+
+        if (!comment || Object.keys(comment).length === 0 || comment.length === 0){
+            return res.status(404).send({
+                status: 'error',
+                error: true,
+                message: 'El comentario no existe.',
+            });
+        }
+
+        // Borrar el comentario
+        let commentDeleted = await comment.remove();
+
+
+        // Actualizar topic
+        let topicSaved = await topic.save();
+
+
+        // Return response.
+        return res.status(200).send({
+            status: 'success',
+            error: false,
+            message: 'Comment deleted successful',
+            //comment: comment,
+
+        });
+
+    }catch (error){
+        console.error('delete comment :', error);
+        return res.status(500).send({
+            status: 'error',
+            error: true,
+            message: 'Error when try delete comment: ' + error,
+        });
+    }
+
+
 };

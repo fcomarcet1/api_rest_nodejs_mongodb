@@ -25,12 +25,13 @@ router.put(
     CommentController.update
 );
 
-// Update comment
-router.put(
+// Delete comment
+router.delete(
     '/comment/delete/:topicId/:commentId',
     [cleanBody, AuthMiddleware.verifyAuth],
     CommentController.delete
 );
+
 
 
 module.exports = router;
