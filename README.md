@@ -19,8 +19,6 @@
 
     -GET ALL: Users list [ROLE_ADMIN]: (GET) http://localhost:3099/api/user/all
 
-    -EDIT: Fill form edit user (GET) http://localhost:3099/api/user/edit
-
     -EDIT: Update user account (PUT) http://localhost:3099/api/user/edit
         -Inputs: [name, surname, email]
 
