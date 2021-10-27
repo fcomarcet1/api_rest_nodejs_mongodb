@@ -14,7 +14,10 @@ const CommentSchema = new Schema(
             trim: true,
             required: true,
         },
-        user: {type: Schema.ObjectId, ref: "User"},
+        user: {
+            type: Schema.ObjectId, 
+            ref: "User"
+        },
     },
     {timestamps: true}
 );
@@ -51,7 +54,11 @@ const TopicSchema = new Schema(
             type: String,
             trim: true,
         },
-        user: {type: Schema.ObjectId, ref: "User"},
+        // Relation Topic-User
+        user: {
+            type: Schema.ObjectId, 
+            ref: "User"
+        },
         comments: [CommentSchema],
         /*comments: {type: Schema.Types.ObjectId, ref: "Comment"}*/
     },
